@@ -1,656 +1,1830 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ms">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>e-Laporan PSS: Papan Pemuka Tugas Pengawas</title>
-    
-    <!-- External Libraries (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #fdfbf7;
+        color: #1f2937;
+        margin: 0;
+        padding: 4px;
+      }
+
+      /* ===== SCREEN: full width normal layout ===== */
+      @media screen {
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9;
-            color: #1e293b;
-            -webkit-print-color-adjust: exact;
+          background: #fdfbf7;
+          padding: 0;
+          margin: 0;
+        }
+        .a4-page {
+          width: 100%;
+          max-height: none;
+          overflow: visible;
+          margin: 0;
+          background: white;
+          padding: 16px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .screen-toolbar {
+          width: 100%;
+          padding: 8px 20px;
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+          background: #f3f4f6;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        /* scale up all your existing text classes */
+        .title-main {
+          font-size: xx-large !important;
+        }
+        .title-sub {
+          font-size: medium !important;
+        }
+        .sec-title {
+          font-size: medium !important;
+        }
+        .label-text {
+          font-size: small !important;
+        }
+        .value-text {
+          font-size: small !important;
+        }
+        .hint-text {
+          font-size: medium !important;
+        }
+        .task-text {
+          font-size: small !important;
+        }
+        .footer-text {
+          font-size: small !important;
         }
 
-        @media print {
-            @page {
-                size: A4;
-                margin: 0;
-            }
-            body {
-                background-color: white;
-                padding: 0;
-                margin: 0;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .a4-container {
-                width: 210mm;
-                height: 297mm;
-                margin: 0;
-                padding: 15mm;
-                box-shadow: none;
-                border: none;
-            }
+        input,
+        textarea,
+        select {
+          font-size: small !important;
+        }
+        .reflection-ta {
+          height: 110px !important;
         }
 
-        .a4-container {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 2rem auto;
-            background: white;
-            padding: 15mm;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            position: relative;
+        .signature-area {
+          content-visibility: hidden !important;
         }
+      }
 
-        @media (max-width: 210mm) {
-            .a4-container {
-                width: 100%;
-                margin: 0;
-                padding: 1rem;
-                box-shadow: none;
-            }
-        }
+      /* ===== TYPOGRAPHY SCALE (compact for A4) ===== */
+      .title-main {
+        font-size: 13pt;
+        font-weight: 700;
+      }
+      .title-sub {
+        font-size: 7pt;
+        color: #6b7280;
+      }
+      .sec-title {
+        font-size: 7.5pt;
+        font-weight: 700;
+        color: #1e293b;
+      }
+      .task-text {
+        font-size: 6.5pt;
+        color: #374151;
+        line-height: 1.35;
+      }
+      .label-text {
+        font-size: 6pt;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .input-text {
+        font-size: 7pt;
+      }
+      .badge {
+        font-size: 5.5pt;
+        font-weight: 700;
+        padding: 1px 4px;
+        border-radius: 3px;
+      }
+      .hint-text {
+        font-size: 6pt;
+        color: #9ca3af;
+      }
+      .footer-text {
+        font-size: 6pt;
+        color: #9ca3af;
+      }
+      .pss-logo {
+        width: auto;
+        height: 120px;
+        margin-right: 10px;
+      }
 
-        .status-ring {
-            transition: stroke-dasharray 0.5s ease;
-        }
+      /* ===== SECTION CARDS ===== */
+      .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 5px 7px;
+      }
+      .card-colored {
+        border-radius: 6px;
+        padding: 4px 7px;
+      }
+      .border-l-strip {
+        border-left: 3px solid;
+        border-radius: 4px;
+        padding: 3px 6px;
+      }
 
-        .task-checkbox:checked + span {
-            color: #0f172a;
-            font-weight: 500;
+      /* ===== FORM INPUTS ===== */
+      .form-input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 3px 5px;
+        background: #f9fafb;
+        font-size: 7pt;
+        font-family: "Inter", sans-serif;
+        color: #1f2937;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      /* ===== CHECKBOXES ===== */
+      .task-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 2px 3px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .task-row:hover {
+        background: #f8fafc;
+      }
+      .task-cb {
+        width: 10px;
+        height: 10px;
+        flex-shrink: 0;
+        margin-top: 1px;
+        accent-color: #2563eb;
+        cursor: pointer;
+      }
+
+      /* ===== STATUS TOGGLE BUTTONS ===== */
+      .status-toggle {
+        font-size: 5.5pt;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 9999px;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .status-ok {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status-bad {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      /* ===== PROGRESS RING ===== */
+      #progress-ring {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: conic-gradient(#2563eb 0%, #e2e8f0 0%);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .ring-inner {
+        width: 22px;
+        height: 22px;
+        background: white;
+        border-radius: 50%;
+        position: absolute;
+      }
+      .label-task {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .label-task:hover {
+        background: #f8fafc;
+        border-radius: 8px;
+      }
+
+      /* ===== CHART ===== */
+      .chart-wrap {
+        position: relative;
+        width: 90%;
+        height: 80px;
+      }
+
+      /* ===== GRID HELPERS ===== */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 5px;
+      }
+      .grid-4 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 4px;
+      }
+      .grid-32 {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 5px;
+      }
+      .grid-23 {
+        display: grid;
+        grid-template-columns: 2fr 3fr;
+        gap: 5px;
+      }
+      .col-span-2 {
+        grid-column: span 2;
+      }
+
+      /* ===== IMAGE UPLOAD ===== */
+      .img-box {
+        border: 1.5px dashed #d1d5db;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        height: 80px;
+        background: #f9fafb;
+        transition: border-color 0.2s;
+      }
+      .img-box:hover {
+        border-color: #3b82f6;
+      }
+      .img-box label {
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .img-box .preview-area {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .img-box .preview-area img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* ===== REFLECTION TEXTAREA ===== */
+      .reflection-ta {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 3px 5px;
+        font-size: 6.5pt;
+        font-family: "Inter", sans-serif;
+        resize: none;
+        height: 28px;
+        background: #f9fafb;
+      }
+      .reflection-ta:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      /* ===== SIGNATURE LINE ===== */
+      .sig-line {
+        border-bottom: 1px solid #d1d5db;
+        min-width: 80px;
+        height: 14px;
+        display: inline-block;
+      }
+
+      /* ===== PRINT: A4 dimensions ===== */
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+          margin: 0;
         }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
+        .screen-toolbar {
+          display: none !important;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+        .a4-page {
+          width: 210mm;
+          min-height: 297mm;
+          max-height: 297mm;
+          margin: 0;
+          padding: 8mm 9mm 6mm 9mm;
+          page-break-after: auto;
+          overflow: hidden;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
+        @page {
+          size: A4 portrait;
+          margin: 0;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        .reflection-ta::placeholder {
+          color: transparent !important;
         }
+        .hint-text {
+          color: transparent !important;
+        }
+        .pss-logo {
+          height: 60px !important;
+        }
+        .signature-area {
+          content-visibility: visible !important;
+        }
+        .download-btn {
+          content-visibility: hidden !important;
+          display: none !important;
+        }
+        textarea::placeholder {
+          color: transparent;
+        }
+        .hero {
+          display: none !important;
+          height: 0 !important;
+          overflow: hidden !important;
+        }
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+      }
+
+      /* ── HERO ── */
+      .hero {
+        color: #ffffff;
+        overflow-x: hidden;
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 24px 60px;
+        overflow: hidden;
+      }
+
+      /* layered background */
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 20% 50%,
+            rgba(15, 123, 114, 0.35) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 70% at 85% 30%,
+            rgba(201, 162, 39, 0.12) 0%,
+            transparent 55%
+          ),
+          linear-gradient(160deg, #0b1f2a 0%, #0e2e3b 50%, #0b1f2a 100%);
+        z-index: 0;
+      }
+
+      /* animated grid lines */
+      .grid-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background-image:
+          linear-gradient(rgba(20, 168, 156, 0.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(20, 168, 156, 0.07) 1px, transparent 1px);
+        background-size: 48px 48px;
+        animation: gridScroll 24s linear infinite;
+      }
+      @keyframes gridScroll {
+        from {
+          background-position: 0 0;
+        }
+        to {
+          background-position: 48px 48px;
+        }
+      }
+
+      /* floating orbs */
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.18;
+        animation: float 10s ease-in-out infinite;
+        z-index: 0;
+      }
+      .orb-1 {
+        width: 420px;
+        height: 420px;
+        background: var(--teal2);
+        top: -100px;
+        left: -120px;
+        animation-delay: 0s;
+      }
+      .orb-2 {
+        width: 300px;
+        height: 300px;
+        background: var(--gold);
+        bottom: -60px;
+        right: -80px;
+        animation-delay: 3s;
+      }
+      .orb-3 {
+        width: 200px;
+        height: 200px;
+        background: var(--teal);
+        top: 40%;
+        left: 55%;
+        animation-delay: 6s;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0) scale(1);
+        }
+        50% {
+          transform: translateY(-30px) scale(1.05);
+        }
+      }
+
+      /* ── CONTENT ── */
+      .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 860px;
+        text-align: center;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(20, 168, 156, 0.6);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(20, 168, 156, 0);
+        }
+      }
+
+      /* headline */
+      .headline {
+        font-family: "Playfair Display", serif;
+        font-size: clamp(2.8rem, 7vw, 5.2rem);
+        font-weight: 900;
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        margin-bottom: 12px;
+        opacity: 0;
+        animation: fadeUp 0.7s 0.25s forwards;
+      }
+      .headline span {
+        background: linear-gradient(135deg, var(--teal2) 0%, var(--gold) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subhead {
+        font-size: clamp(1rem, 2.2vw, 1.25rem);
+        font-weight: 300;
+        color: rgba(232, 244, 243, 0.65);
+        line-height: 1.6;
+        max-width: 620px;
+        margin: 0 auto 40px;
+        opacity: 0;
+        animation: fadeUp 0.7s 0.4s forwards;
+      }
+
+      /* CTA row */
+      .cta-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 64px;
+        opacity: 0;
+        animation: fadeUp 0.7s 0.55s forwards;
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(135deg, var(--teal) 0%, var(--teal2) 100%);
+        color: #fff;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 15px 32px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 8px 32px rgba(15, 123, 114, 0.4);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 40px rgba(15, 123, 114, 0.55);
+      }
+
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        color: rgba(232, 244, 243, 0.8);
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        padding: 14px 28px;
+        border-radius: 12px;
+        border: 1px solid rgba(232, 244, 243, 0.2);
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          border-color 0.2s,
+          color 0.2s,
+          background 0.2s;
+      }
+      .btn-secondary:hover {
+        border-color: rgba(20, 168, 156, 0.6);
+        color: var(--teal2);
+        background: rgba(20, 168, 156, 0.06);
+      }
+
+      /* ── STATS BAR ── */
+      .stats-bar {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 0;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        backdrop-filter: blur(12px);
+        overflow: hidden;
+        opacity: 0;
+        animation: fadeUp 0.7s 0.7s forwards;
+        max-width: 680px;
+        margin: 0 auto;
+      }
+      .stat {
+        flex: 1;
+        padding: 22px 24px;
+        text-align: center;
+        position: relative;
+      }
+      .stat + .stat::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 20%;
+        height: 60%;
+        width: 1px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .stat-icon {
+        font-size: 1.4rem;
+        margin-bottom: 4px;
+      }
+      .stat-val {
+        font-family: "Playfair Display", serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--teal2);
+        line-height: 1;
+      }
+      .stat-label {
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(232, 244, 243, 0.45);
+        margin-top: 4px;
+      }
+
+      /* ── FEATURE PILLS ── */
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 48px;
+        opacity: 0;
+        animation: fadeUp 0.7s 0.5s forwards;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 100px;
+        padding: 7px 16px;
+        font-size: 0.8rem;
+        color: rgba(232, 244, 243, 0.7);
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .pill:hover {
+        border-color: var(--teal2);
+        color: var(--teal2);
+      }
+      .pill-icon {
+        font-size: 0.9rem;
+      }
+
+      /* ── ANIMATIONS ── */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* ── SCHOOL NAME STRIP ── */
+      .school-strip {
+        position: absolute;
+        top: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(232, 244, 243, 0.3);
+        z-index: 1;
+      }
+
+      /* badge */
+      .badge-hero {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(20, 168, 156, 0.15);
+        border: 1px solid rgba(20, 168, 156, 0.4);
+        border-radius: 100px;
+        padding: 6px 18px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--teal2);
+        margin-bottom: 28px;
+        opacity: 0;
+        animation: fadeUp 0.6s 0.1s forwards;
+      }
+      .badge-dot-hero {
+        width: 8px;
+        height: 8px;
+        background: var(--teal2);
+        border-radius: 50%;
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(20, 168, 156, 0.6);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(20, 168, 156, 0);
+        }
+      }
     </style>
-</head>
-<body class="antialiased">
-
-    <!-- Floating Actions -->
-    <div class="fixed bottom-8 right-8 flex flex-col gap-3 no-print z-50">
-        <button onclick="window.print()" class="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 transition-all transform hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-            <span>Cetak PDF</span>
-        </button>
-        <button id="submitBtn" onclick="handleSubmit()" class="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-700 transition-all transform hover:scale-105">
-            <svg id="submitIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            <svg id="loadingIcon" class="hidden animate-spin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
-            <span id="submitText">Hantar Laporan</span>
-        </button>
-    </div>
-
-    <div id="reportContent" class="a4-container mx-auto">
-        <!-- Header -->
-        <div class="flex justify-between items-start mb-6">
-            <div class="flex items-center gap-4">
-                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center overflow-hidden">
-                    <img src="https://picsum.photos/seed/logo/100/100" class="w-full h-full object-cover opacity-80" alt="Logo">
-                </div>
-                <div>
-                    <h1 class="text-3xl font-black text-slate-800 tracking-tight">e-Laporan PSS</h1>
-                    <p class="text-slate-500 font-semibold text-sm">Papan Pemuka Tugas Pengawas Pusat Sumber</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status Tugasan</p>
-                <div class="flex items-center gap-3">
-                    <span id="progressText" class="text-4xl font-black text-blue-600">0%</span>
-                    <div class="relative w-12 h-12">
-                        <svg class="w-full h-full" viewBox="0 0 36 36">
-                            <path class="text-slate-100" stroke-dasharray="100, 100" stroke-width="3" stroke="currentColor" fill="transparent" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                            <path id="progressRing" class="text-blue-600 status-ring" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="transparent" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- User Info -->
-        <div class="grid grid-cols-3 gap-4 mb-6 border-y border-slate-100 py-4">
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    Nama Pengawas
-                </label>
-                <input type="text" id="nama" placeholder="Nama penuh..." class="w-full border-b border-slate-200 py-1 text-sm focus:outline-none focus:border-blue-500 transition-colors">
-            </div>
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    Tarikh
-                </label>
-                <input type="text" id="tarikh" placeholder="dd/mm/yyyy" class="w-full border-b border-slate-200 py-1 text-sm focus:outline-none focus:border-blue-500 transition-colors">
-            </div>
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    Masa Bertugas
-                </label>
-                <div class="flex items-center gap-2">
-                    <input type="text" id="masaMula" placeholder="--:-- --" class="w-full border-b border-slate-200 py-1 text-sm focus:outline-none focus:border-blue-500 transition-colors text-center">
-                    <span class="text-slate-300">â€“</span>
-                    <input type="text" id="masaTamat" placeholder="--:-- --" class="w-full border-b border-slate-200 py-1 text-sm focus:outline-none focus:border-blue-500 transition-colors text-center">
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 1 & 2: Blue -->
-        <div class="mb-6">
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4">
-                <h2 class="text-blue-800 font-bold text-sm">Seksyen 1 & 2: Teras Perkhidmatan PSS</h2>
-                <p class="text-[10px] text-blue-600 mt-1 leading-relaxed">
-                    Bahagian ini merangkumi tugasan kritikal di kaunter sirkulasi dan pengurusan rak buku. Pengawas perlu memastikan data pinjaman tepat dan buku disusun mengikut piawaian Dewey (DDC).
-                </p>
-            </div>
-            <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-4 border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-blue-50 px-1.5 py-0.5 rounded">Seksyen 1</span> Kaunter & Sirkulasi
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Sirkulasi Bahan Elctronik: Menguruskan transaksi pinjaman/pemulangan.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Audit Fizikal: Semak kerosakan/vandalisme buku sebelum terima.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Pengurusan Fiskal: Rekod kutipan denda & keluarkan resit.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Khidmat Pelanggan: Bantu pendaftaran ahli dna pertanyaan.</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-3 border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-blue-50 px-1.5 py-0.5 rounded">Seksyen 2</span> Koleksi & Rak
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Shelf-Reading: Susunan ikut No. Panggilan & Kod Warna.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Sudut Komik: Susun ikut siri, pastikan fizikal baik.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Logistik: Kosongkan troli, susun buku ke rak asal.</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-5 border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-blue-50 px-1.5 py-0.5 rounded">Seksyen 2</span> Statistik Harian
-                    </h3>
-                    <div class="grid grid-cols-4 gap-2 mb-4">
-                        <div class="space-y-1">
-                            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter truncate">Pinjam</p>
-                            <input type="number" id="pinjaman" value="0" class="w-full rounded-md px-2 py-1 text-xs font-bold text-center focus:outline-none bg-blue-50 text-blue-600" oninput="updateChart()">
-                        </div>
-                        <div class="space-y-1">
-                            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter truncate">Pulang</p>
-                            <input type="number" id="pulang" value="0" class="w-full rounded-md px-2 py-1 text-xs font-bold text-center focus:outline-none bg-green-50 text-green-600" oninput="updateChart()">
-                        </div>
-                        <div class="space-y-1">
-                            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter truncate">Denda (RM)</p>
-                            <input type="text" id="denda" value="0.00" class="w-full rounded-md px-2 py-1 text-xs font-bold text-center focus:outline-none bg-red-50 text-red-600">
-                        </div>
-                        <div class="space-y-1">
-                            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter truncate">Pelawat</p>
-                            <input type="number" id="pelawat" value="0" class="w-full rounded-md px-2 py-1 text-xs font-bold text-center focus:outline-none bg-purple-50 text-purple-600" oninput="updateChart()">
-                        </div>
-                    </div>
-                    <div class="h-24 w-full">
-                        <canvas id="statChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 3: Purple -->
-        <div class="mb-6">
-            <div class="bg-purple-50 border-l-4 border-purple-500 p-3 mb-4">
-                <h2 class="text-purple-800 font-bold text-sm">Seksyen 3: Pengurusan Aset Digital</h2>
-                <p class="text-[10px] text-purple-600 mt-1 leading-relaxed">
-                    Memantau 'Sudut Digital Station' yang mengandungi PC All-In-One dan iPad. Fokus kepada kefungsian peranti, akses kepada aplikasi Ookbee Buffet (PNM), dan sokongan AV.
-                </p>
-            </div>
-            <div class="grid grid-cols-3 gap-4">
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-purple-50 px-1.5 py-0.5 rounded">Seksyen 3</span> 🖥️ PC All-In-One (3 unit)
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between gap-2 bg-slate-50/50 p-1.5 rounded-md border border-slate-100/50">
-                            <span class="text-[10px] font-bold text-slate-700">PC-01</span>
-                            <button onclick="toggleIct(this)" class="text-[8px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700">BERFUNGSI</button>
-                        </div>
-                        <div class="flex items-center justify-between gap-2 bg-slate-50/50 p-1.5 rounded-md border border-slate-100/50">
-                            <span class="text-[10px] font-bold text-slate-700">PC-02</span>
-                            <button onclick="toggleIct(this)" class="text-[8px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700">BERFUNGSI</button>
-                        </div>
-                        <div class="flex items-center justify-between gap-2 bg-slate-50/50 p-1.5 rounded-md border border-slate-100/50">
-                            <span class="text-[10px] font-bold text-slate-700">PC-03</span>
-                            <button onclick="toggleIct(this)" class="text-[8px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700">BERFUNGSI</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-purple-50 px-1.5 py-0.5 rounded">Seksyen 3</span> 📱 iPad Ookbee (3 unit)
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between gap-2 bg-slate-50/50 p-1.5 rounded-md border border-slate-100/50">
-                            <span class="text-[10px] font-bold text-slate-700">iPad-01</span>
-                            <button onclick="toggleIct(this)" class="text-[8px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700">BERFUNGSI</button>
-                        </div>
-                        <div class="flex items-center justify-between gap-2 bg-slate-50/50 p-1.5 rounded-md border border-slate-100/50">
-                            <span class="text-[10px] font-bold text-slate-700">iPad-02</span>
-                            <button onclick="toggleIct(this)" class="text-[8px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700">BERFUNGSI</button>
-                        </div>
-                        <div class="flex items-center justify-between gap-2 bg-slate-50/50 p-1.5 rounded-md border border-slate-100/50">
-                            <span class="text-[10px] font-bold text-slate-700">iPad-03</span>
-                            <button onclick="toggleIct(this)" class="text-[8px] font-black px-2 py-0.5 rounded-full bg-green-100 text-green-700">BERFUNGSI</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-purple-50 px-1.5 py-0.5 rounded">Seksyen 3</span> Tugasan Rutin ICT
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Penyeliaan: Pastikan PC 'shutdown' & meja bersih.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Ookbee: Pastikan aplikasi boleh diakses & e majalah tersedia.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Sokongan AV: Uji projektor/PA system untuk guru.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 5 & 6: Green -->
-        <div class="mb-6">
-            <div class="bg-green-50 border-l-4 border-green-500 p-3 mb-4">
-                <h2 class="text-green-800 font-bold text-sm">Seksyen 5 & 6: Zon Rekreasi & Alam</h2>
-                <p class="text-[10px] text-green-600 mt-1 leading-relaxed">
-                    Menyelaras ruang 'Mini Library Cafe', 'Sudut Permainan', dan 'Mini Herbs Garden'. Tujuannya adalah memastikan persekitaran yang santai, bersih, dan teraputik.
-                </p>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-green-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-green-50 px-1.5 py-0.5 rounded">Seksyen 5</span> ☕ Mini Cafe & Permainan
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Kekemasan Kafe: Meja/kerusi tersusun kondusif.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Permainan Dalaman: Simpan Catur/Saidina dalam kotak asal.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Sanitasi: Tiada sisa makanan/minuman tertinggal.</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-green-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-green-50 px-1.5 py-0.5 rounded">Seksyen 6</span> 🌿 Mini Herbs Garden
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Kebersihan Taman: Bebas sampah/daun kering berselerak.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Label Maklumat: Nama saintifik tumbuhan jelas dibaca.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4, 7 & 8: Red -->
-        <div class="mb-6">
-            <div class="bg-red-50 border-l-4 border-red-500 p-3 mb-4">
-                <h2 class="text-red-800 font-bold text-sm">Seksyen 4, 7 & 8: Akademik & Sahsiah</h2>
-                <p class="text-[10px] text-red-600 mt-1 leading-relaxed">
-                    Fokus kepada pembangunan modal insan: Program Mentor-Mentee, Kawalan Disiplin, dan pemerkasaan program NILAM melalui Sistem AINS (DELIMa).
-                </p>
-            </div>
-            <div class="grid grid-cols-3 gap-4">
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-red-50 px-1.5 py-0.5 rounded">Seksyen 4</span> Program Mentor-Mentee
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Mentor Sebaya: Membantu rakan memahami subjek.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Bimbingan Rujukan: Bantu cari buku teks/modul.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Penyeliaan Fokus: Kawalan bunyi di zon ulang kaji.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Susun Atur: Kerusi/meja dikembalikan ke tempat asal.</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-red-50 px-1.5 py-0.5 rounded">Seksyen 7</span> Disiplin & Inventori
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Etika: Kawal kebisingan & larangan beg.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Inventori Prasarana: Periksa lampu, suis, perabot.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Sanitasi: Lantai/rak bebas habuk.</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-3">
-                    <h3 class="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span class="bg-red-50 px-1.5 py-0.5 rounded">Seksyen 8</span> Tugas Khas & NILAM
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Sistem AINS: Bantu akses DELIMa & rekod NILAM.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Teknikal Bahan: Stamping, label & balut buku.</span>
-                        </div>
-                        <div class="flex items-start gap-2 group cursor-pointer" onclick="toggleTask(this)">
-                            <input type="checkbox" class="task-checkbox hidden">
-                            <div class="mt-0.5 w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center transition-all bg-white"></div>
-                            <span class="text-[10px] leading-tight text-slate-500">Promosi Literasi: Taklimat e-buku Ookbee/carian bahan.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lampiran Gambar -->
-        <div class="mb-6 border border-slate-100 rounded-lg p-4">
-            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                Lampiran Gambar <span class="text-slate-300 font-normal lowercase">(muat naik sehingga 4 gambar)</span>
-            </h3>
-            <div class="grid grid-cols-4 gap-4">
-                <div class="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 hover:border-blue-200 transition-all cursor-pointer group">
-                    <span class="text-[10px] font-medium">Gambar 1</span>
-                </div>
-                <div class="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 hover:border-blue-200 transition-all cursor-pointer group">
-                    <span class="text-[10px] font-medium">Gambar 2</span>
-                </div>
-                <div class="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 hover:border-blue-200 transition-all cursor-pointer group">
-                    <span class="text-[10px] font-medium">Gambar 3</span>
-                </div>
-                <div class="aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 hover:border-blue-200 transition-all cursor-pointer group">
-                    <span class="text-[10px] font-medium">Gambar 4</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer / Reflection -->
-        <div class="grid grid-cols-12 gap-6 items-end">
-            <div class="col-span-8">
-                <h3 class="text-[10px] font-bold text-slate-800 uppercase tracking-wider mb-2">Refleksi & Catatan Tambahan</h3>
-                <textarea id="catatan" class="w-full h-24 border border-slate-200 rounded-lg p-3 text-xs focus:outline-none focus:border-blue-500 transition-colors bg-slate-50/50" placeholder="Isu berbangkit, kerosakan spesifik, atau cadangan penambahbaikan..."></textarea>
-            </div>
-            <div class="col-span-4 text-right space-y-4">
-                <div class="space-y-1">
-                    <p class="text-[10px] text-slate-400">Tandatangan Pengawas PSS:</p>
-                    <div class="h-10 border-b border-slate-200"></div>
-                </div>
-                <div class="flex justify-end gap-2 items-center">
-                    <p class="text-[10px] text-slate-400">Tarikh:</p>
-                    <div class="w-32 border-b border-slate-200 h-4"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Copyright -->
-        <div class="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center text-[9px] text-slate-400 font-medium">
-            <p>e-Laporan Pengawas PSS © 2026 | Pusat Sumber Sekolah Permata Gemilang — Kolej Datu Patinggi Abang Haji Abdillah</p>
-            <p>*Semak semua butiran sebelum pengesahan</p>
-        </div>
-    </div>
 
     <script>
-        // --- Configuration ---
-        // Replace this with your actual Google Apps Script Web App URL
-        const GAS_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+      function toggleStatus(btn) {
+        if (btn.innerText === "BERFUNGSI") {
+          btn.innerText = "ROSAK";
+          btn.className = "status-toggle status-bad";
+        } else {
+          btn.innerText = "BERFUNGSI";
+          btn.className = "status-toggle status-ok";
+        }
+      }
 
-        // --- Chart Logic ---
-        let chart;
-        function initChart() {
-            const ctx = document.getElementById('statChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Pinjam', 'Pulang', 'Pelawat'],
-                    datasets: [{
-                        data: [0, 0, 0],
-                        backgroundColor: ['#3b82f6', '#22c55e', '#a855f7'],
-                        borderRadius: 4,
-                        barThickness: 20
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { display: false }
-                    }
-                }
+      function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        const file = input.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            preview.innerHTML = `
+        <div style="position:relative;width:100%;height:100%;">
+          <img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;display:block;">
+          <button onclick="removeImage('${input.id}','${previewId}')" style="position:absolute;top:2px;right:2px;background:#ef4444;color:white;border:none;border-radius:50%;width:14px;height:14px;font-size:9px;cursor:pointer;line-height:14px;padding:0;">×</button>
+        </div>`;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      function removeImage(inputId, previewId) {
+        document.getElementById(inputId).value = "";
+        document.getElementById(previewId).innerHTML =
+          `<span style="font-size:6pt;color:#9ca3af;">Gambar ${inputId.slice(-1)}</span>`;
+      }
+
+      // Submit to download (offline)
+      async function submitForm() {
+        const nama = document.getElementById("nama")?.value?.trim();
+        const tarikh = document.getElementById("tarikh")?.value?.trim();
+
+        // if (!nama || !tarikh) {
+        //   alert("Sila lengkapkan nama dan tarikh sebelum menghantar.");
+        //   return;
+        // }
+
+        const [year, month, day] = tarikh.split("-");
+        const tarikhFormatted = `${day}_${month}_${year}`;
+        const originalTitle = document.title;
+
+        // This sets the default filename in the Save Print Output As dialog
+        document.title = `${nama}_${tarikhFormatted}`;
+
+        window.print();
+
+        // Restore original title after print dialog closes
+        setTimeout(() => {
+          document.title = originalTitle;
+        }, 1000);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Chart
+        const ctx = document.getElementById("sirkulasiChart").getContext("2d");
+        const sirkulasiChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Pinjaman", "Pemulangan", "Pelawat"],
+            datasets: [
+              {
+                label: "Statistik Harian",
+                data: [0, 0, 0],
+                backgroundColor: [
+                  "rgba(37,99,235,0.7)",
+                  "rgba(16,185,129,0.7)",
+                  "rgba(147,51,234,0.7)",
+                ],
+                borderColor: [
+                  "rgb(37,99,235)",
+                  "rgb(16,185,129)",
+                  "rgb(147,51,234)",
+                ],
+                borderWidth: 1,
+                borderRadius: 3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, title: { display: false } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: { color: "#f3f4f6" },
+                ticks: { font: { size: 7 }, maxTicksLimit: 4 },
+              },
+              x: { grid: { display: false }, ticks: { font: { size: 7 } } },
+            },
+          },
+        });
+
+        ["input-pinjaman", "input-pemulangan", "input-pelawat"].forEach(
+          (id, i) => {
+            document.getElementById(id).addEventListener("input", (e) => {
+              sirkulasiChart.data.datasets[0].data[i] =
+                parseFloat(e.target.value) || 0;
+              sirkulasiChart.update();
             });
-        }
+          },
+        );
 
-        function updateChart() {
-            const pinjam = document.getElementById('pinjaman').value || 0;
-            const pulang = document.getElementById('pulang').value || 0;
-            const pelawat = document.getElementById('pelawat').value || 0;
-            chart.data.datasets[0].data = [pinjam, pulang, pelawat];
-            chart.update();
-        }
-
-        // --- Task Logic ---
-        function toggleTask(el) {
-            const checkbox = el.querySelector('input[type="checkbox"]');
-            const box = el.querySelector('.border');
-            checkbox.checked = !checkbox.checked;
-            
-            if (checkbox.checked) {
-                box.classList.add('bg-blue-600', 'border-blue-600');
-                box.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-                el.querySelector('span').classList.remove('text-slate-500');
-                el.querySelector('span').classList.add('text-slate-900', 'font-medium');
-            } else {
-                box.classList.remove('bg-blue-600', 'border-blue-600');
-                box.innerHTML = '';
-                el.querySelector('span').classList.add('text-slate-500');
-                el.querySelector('span').classList.remove('text-slate-900', 'font-medium');
-            }
-            updateProgress();
-        }
-
+        // Progress ring
+        const cbs = document.querySelectorAll(".task-cb");
         function updateProgress() {
-            const total = 21; // Counted tasks
-            const checked = document.querySelectorAll('.task-checkbox:checked').length;
-            const percentage = Math.round((checked / total) * 100);
-            
-            document.getElementById('progressText').innerText = percentage + '%';
-            document.getElementById('progressRing').setAttribute('stroke-dasharray', `${percentage}, 100`);
+          const total = cbs.length;
+          const checked = document.querySelectorAll(".task-cb:checked").length;
+          const pct = Math.round((checked / total) * 100);
+          document.getElementById("progress-text").innerText = pct + "%";
+          document.getElementById("progress-ring").style.background =
+            `conic-gradient(#2563EB ${pct}%, #E2E8F0 ${pct}%)`;
         }
-
-        // --- ICT Logic ---
-        function toggleIct(btn) {
-            if (btn.innerText === 'BERFUNGSI') {
-                btn.innerText = 'ROSAK';
-                btn.classList.remove('bg-green-100', 'text-green-700');
-                btn.classList.add('bg-red-100', 'text-red-700');
-            } else {
-                btn.innerText = 'BERFUNGSI';
-                btn.classList.add('bg-green-100', 'text-green-700');
-                btn.classList.remove('bg-red-100', 'text-red-700');
-            }
-        }
-
-        // --- Submission Logic ---
-        async function handleSubmit() {
-            const nama = document.getElementById('nama').value;
-            const tarikh = document.getElementById('tarikh').value;
-
-            if (!nama || !tarikh) {
-                alert('Sila masukkan Nama dan Tarikh sebelum menghantar.');
-                return;
-            }
-
-            const submitBtn = document.getElementById('submitBtn');
-            const submitIcon = document.getElementById('submitIcon');
-            const loadingIcon = document.getElementById('loadingIcon');
-            const submitText = document.getElementById('submitText');
-
-            // Set Loading State
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-70');
-            submitIcon.classList.add('hidden');
-            loadingIcon.classList.remove('hidden');
-            submitText.innerText = 'Menghantar...';
-
-            try {
-                // 1. Generate PDF
-                const element = document.getElementById('reportContent');
-                const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-                const imgData = canvas.toDataURL('image/jpeg', 0.8);
-                
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                const pdfBase64 = pdf.output('datauristring').split(',')[1];
-
-                // 2. Prepare Data
-                const payload = {
-                    nama: nama,
-                    tarikh: tarikh,
-                    masaMula: document.getElementById('masaMula').value,
-                    masaTamat: document.getElementById('masaTamat').value,
-                    pinjaman: document.getElementById('pinjaman').value,
-                    pulang: document.getElementById('pulang').value,
-                    denda: document.getElementById('denda').value,
-                    pelawat: document.getElementById('pelawat').value,
-                    catatan: document.getElementById('catatan').value,
-                    progress: document.getElementById('progressText').innerText,
-                    pdfFile: pdfBase64,
-                    fileName: `Laporan_PSS_${nama.replace(/\s+/g, '_')}_${tarikh}.pdf`
-                };
-
-                // 3. Send to GAS
-                // Note: GAS requires a simple POST without complex headers for no-cors mode
-                await fetch(GAS_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                });
-
-                alert('Laporan berjaya dihantar! Data telah disimpan ke Spreadsheet dan PDF telah disimpan ke Drive.');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Ralat semasa menghantar laporan. Sila cuba lagi.');
-            } finally {
-                // Reset State
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-70');
-                submitIcon.classList.remove('hidden');
-                loadingIcon.classList.add('hidden');
-                submitText.innerText = 'Hantar Laporan';
-            }
-        }
-
-        // Initialize
-        window.onload = initChart;
+        cbs.forEach((cb) => cb.addEventListener("change", updateProgress));
+      });
     </script>
-</body>
-</html>
+  </head>
 
+  <body>
+    <!-- Hero Section -->
+    <section class="hero">
+      <!-- backgrounds -->
+      <div class="grid-bg"></div>
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+
+      <p class="school-strip">
+        Kolej Datu Patinggi Abang Haji Abdillah · Pusat Sumber Sekolah
+      </p>
+
+      <div class="hero-content">
+        <!-- badge -->
+        <div class="badge-hero">
+          <span class="badge-dot-hero"></span>
+          Sistem Laporan Digital 2026
+        </div>
+
+        <!-- headline -->
+        <h1 class="headline">Laporan Pengawas PSS<br /></h1>
+
+        <!-- subhead -->
+        <p class="subhead">
+          Platform <strong>e-Laporan PSS</strong> memudahkan pengawas pusat
+          sumber sekolah dan guru merekod tugasan harian — dari kaunter
+          sirkulasi hingga pengurusan aset digital — dalam satu borang yang
+          tersusun dan boleh dimuat turun.
+        </p>
+
+        <!-- feature pills -->
+        <div class="pills">
+          <span class="pill"
+            ><span class="pill-icon">📚</span> Koleksi &amp; Rak</span
+          >
+          <span class="pill"
+            ><span class="pill-icon">💻</span> Aset Digital &amp; ICT</span
+          >
+          <span class="pill"
+            ><span class="pill-icon">🌿</span> Zon Rekreasi &amp; Alam</span
+          >
+          <span class="pill"
+            ><span class="pill-icon">🎓</span> Program NILAM</span
+          >
+          <span class="pill"
+            ><span class="pill-icon">📊</span> Statistik Harian</span
+          >
+          <span class="pill"
+            ><span class="pill-icon">🖼️</span> Lampiran Gambar</span
+          >
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-row">
+          <a href="#borang" class="btn-primary">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="12" x2="12" y2="18" />
+              <line x1="9" y1="15" x2="15" y2="15" />
+            </svg>
+            Isi Borang Sekarang
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Form -->
+    <div class="a4-page" id="borang">
+      <!-- ── HEADER ── -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 2px solid #2563eb;
+          padding-bottom: 4px;
+          margin-bottom: 5px;
+        "
+      >
+        <div style="display: flex">
+          <img
+            src="https://scontent.fkch2-1.fna.fbcdn.net/v/t39.30808-6/307286529_445963450849920_1757158915050497100_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=be4SzwoA9VEQ7kNvwGEz0WO&_nc_oc=AdlU7hBTClL81Is7qVr_tzP5et7hUkJD22NTSCJIiVXxmmuqBekutLkyiRKFzaTbhug&_nc_zt=23&_nc_ht=scontent.fkch2-1.fna&_nc_gid=17B2W8Pa2odMaeFtXnG0yw&_nc_ss=8&oh=00_Afy2U_RixYz8zjsiSmG8zztZ5WKdSfyFrLXICBGy0Zl5Bg&oe=69ADBE7D"
+            alt="Logo PSS"
+            class="pss-logo"
+          />
+          <div>
+            <div class="title-main" style="color: #1e3a8a">e-Laporan PSS</div>
+            <div class="title-sub">
+              Papan Pemuka Tugas Pengawas Pusat Sumber
+            </div>
+            <div class="title-sub" style="margin-top: 1px">
+              Kolej Datu Patinggi Abang Haji Abdillah
+            </div>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 4px 8px;
+          "
+        >
+          <div style="text-align: right">
+            <div class="label-text">Status Tugasan</div>
+            <div
+              id="progress-text"
+              style="
+                font-size: 11pt;
+                font-weight: 700;
+                color: #2563eb;
+                line-height: 1.1;
+              "
+            >
+              0%
+            </div>
+          </div>
+          <div id="progress-ring">
+            <div class="ring-inner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INFO BAR ── -->
+      <div class="grid-3" style="margin-bottom: 4px">
+        <div>
+          <div class="label-text" style="margin-bottom: 2px">Nama Pengawas</div>
+          <input
+            id="nama"
+            type="text"
+            placeholder="Nama penuh..."
+            class="form-input"
+          />
+        </div>
+        <div>
+          <div class="label-text" style="margin-bottom: 2px">
+            Tarikh &amp; Hari
+          </div>
+          <input id="tarikh" type="date" class="form-input" />
+        </div>
+        <div>
+          <div class="label-text" style="margin-bottom: 2px">Masa Bertugas</div>
+          <div style="display: flex; gap: 3px; align-items: center">
+            <input
+              id="masaMula"
+              type="time"
+              class="form-input"
+              style="width: 50%"
+            />
+            <span style="font-size: 7pt; color: #9ca3af">–</span>
+            <input
+              id="masaTamat"
+              type="time"
+              class="form-input"
+              style="width: 50%"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════
+           MAIN CONTENT AREA — 4 zones stacked compactly
+      ══════════════════════════════════════════════════════ -->
+      <div
+        style="
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          overflow: hidden;
+        "
+      >
+        <!-- INFO BOX (FULL WIDTH) -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-2 w-full">
+          <div class="flex">
+            <div class="ml-3">
+              <h3 class="sec-title font-medium text-blue-800">
+                📚 Seksyen 1 & 2: Teras Perkhidmatan PSS
+              </h3>
+              <div class="mt-2 task-text text-blue-700">
+                <p>
+                  Bahagian ini merangkumi tugasan kritikal di kaunter sirkulasi
+                  dan pengurusan rak buku. Pengawas perlu memastikan data
+                  pinjaman tepat dan buku disusun mengikut piawaian Dewey (DDC).
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- ZONE 1: Operasi (Seksyen 1 & 2 + Statistik) -->
+        <!-- ─────────────────────────────────────────── -->
+
+        <div id="panel-operasi" class="tab-panel active">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr 1.1fr;
+              gap: 5px;
+            "
+          >
+            <!-- S1: Kaunter -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #dbeafe; color: #1d4ed8"
+                  >S1</span
+                >
+                <span class="sec-title">Kaunter &amp; Sirkulasi</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Sirkulasi:</b> Pinjaman/pemulangan (100%).</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Audit Fizikal:</b> Semak kerosakan/vandalisme buku.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Pengurusan Fiskal:</b> Rekod denda &amp; resit.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Khidmat Pelanggan:</b> Bantu pendaftaran ahli.</span
+                >
+              </div>
+            </div>
+
+            <!-- S2: Koleksi & Rak -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #e0e7ff; color: #4338ca"
+                  >S2</span
+                >
+                <span class="sec-title">Koleksi &amp; Rak</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Shelf-Reading:</b> Susunan ikut No. Panggilan &amp; Kod
+                  Warna.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Sudut Komik:</b> Susun ikut siri, fizikal baik.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Logistik:</b> Kosongkan troli, susun buku ke rak
+                  asal.</span
+                >
+              </div>
+            </div>
+
+            <!-- Statistik Harian -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="sec-title">📊 Statistik Harian</span>
+              </div>
+              <div class="grid-4" style="margin-bottom: 4px">
+                <div>
+                  <div class="label-text">Pinjam</div>
+                  <input
+                    type="number"
+                    id="input-pinjaman"
+                    value="0"
+                    min="0"
+                    class="form-input"
+                    style="color: #2563eb; font-weight: 700"
+                  />
+                </div>
+                <div>
+                  <div class="label-text">Pulang</div>
+                  <input
+                    type="number"
+                    id="input-pemulangan"
+                    value="0"
+                    min="0"
+                    class="form-input"
+                    style="color: #059669; font-weight: 700"
+                  />
+                </div>
+                <div>
+                  <div class="label-text">Kutipan Denda</div>
+                  <input
+                    type="number"
+                    id="input-denda"
+                    value="0.00"
+                    step="0.10"
+                    min="0"
+                    class="form-input"
+                    style="color: #dc2626; font-weight: 700"
+                  />
+                </div>
+                <div>
+                  <div class="label-text">Pelawat</div>
+                  <input
+                    type="number"
+                    id="input-pelawat"
+                    value="0"
+                    min="0"
+                    class="form-input"
+                    style="color: #7c3aed; font-weight: 700"
+                  />
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="sirkulasiChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- ZONE 2: ICT & Digital (Seksyen 3) -->
+        <!-- ─────────────────────────────────────────── -->
+
+        <!-- INFO BOX (FULL WIDTH) -->
+        <div class="bg-purple-50 border-l-4 border-purple-500 p-2 w-full">
+          <div class="flex">
+            <div class="ml-3">
+              <h3 class="sec-title font-medium text-purple-800">
+                🖥️ Seksyen 3: Pengurusan Aset Digital
+              </h3>
+              <div class="mt-2 task-text text-purple-700">
+                <p>
+                  Memantau 'Sudut Digital Station' yang mengandungi PC
+                  All-In-One dan iPad. Fokus kepada kefungsian peranti, akses
+                  kepada aplikasi Ookbee Buffet (PNM), dan sokongan AV.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-ict" class="tab-panel active">
+          <div
+            style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px"
+          >
+            <!-- PC Status -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #f3e8ff; color: #7e22ce"
+                  >S3</span
+                >
+                <span class="sec-title">🖥️ PC All-In-One (3 unit)</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #f9fafb;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                  "
+                >
+                  <span class="task-text" style="font-weight: 600">PC-01</span>
+                  <button
+                    class="status-toggle status-ok"
+                    onclick="toggleStatus(this)"
+                  >
+                    BERFUNGSI
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #f9fafb;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                  "
+                >
+                  <span class="task-text" style="font-weight: 600">PC-02</span>
+                  <button
+                    class="status-toggle status-ok"
+                    onclick="toggleStatus(this)"
+                  >
+                    BERFUNGSI
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #f9fafb;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                  "
+                >
+                  <span class="task-text" style="font-weight: 600">PC-03</span>
+                  <button
+                    class="status-toggle status-ok"
+                    onclick="toggleStatus(this)"
+                  >
+                    BERFUNGSI
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- iPad Status -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #f3e8ff; color: #7e22ce"
+                  >S3</span
+                >
+                <span class="sec-title">📱 iPad Ookbee (3 unit)</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #f9fafb;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                  "
+                >
+                  <span class="task-text" style="font-weight: 600"
+                    >iPad-01</span
+                  >
+                  <button
+                    class="status-toggle status-ok"
+                    onclick="toggleStatus(this)"
+                  >
+                    BERFUNGSI
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #f9fafb;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                  "
+                >
+                  <span class="task-text" style="font-weight: 600"
+                    >iPad-02</span
+                  >
+                  <button
+                    class="status-toggle status-ok"
+                    onclick="toggleStatus(this)"
+                  >
+                    BERFUNGSI
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: #f9fafb;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                  "
+                >
+                  <span class="task-text" style="font-weight: 600"
+                    >iPad-03</span
+                  >
+                  <button
+                    class="status-toggle status-ok"
+                    onclick="toggleStatus(this)"
+                  >
+                    BERFUNGSI
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ICT Rutin -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="sec-title">Tugasan Rutin ICT</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Penyeliaan:</b> Pastikan PC 'shutdown' &amp; meja
+                  bersih.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Ookbee:</b> Pastikan aplikasi boleh diakses &amp;
+                  e-majalah tersedia.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Sokongan AV:</b> Uji projektor/PA system untuk guru.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- ZONE 3: Rekreasi & Alam (Seksyen 5 & 6) -->
+        <!-- ─────────────────────────────────────────── -->
+
+        <!-- INFO BOX (FULL WIDTH) -->
+        <div class="bg-green-50 border-l-4 border-green-500 p-2 w-full">
+          <div class="flex">
+            <div class="ml-3">
+              <h3 class="sec-title font-medium text-green-800">
+                🌿 Seksyen 5 & 6: Zon Rekreasi & Alam
+              </h3>
+              <div class="mt-2 task-text text-green-700">
+                <p>
+                  Memantau 'Sudut Digital Station' yang mengandungi PC
+                  All-In-One dan iPad. Fokus kepada kefungsian peranti, akses
+                  kepada aplikasi Ookbee Buffet (PNM), dan sokongan AV.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-rekreasi" class="tab-panel active">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px">
+            <!-- S5: Mini Cafe & Permainan -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #ffedd5; color: #c2410c"
+                  >S5</span
+                >
+                <span class="sec-title">☕ Mini Cafe &amp; Permainan</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Kekemasan Kafe:</b> Meja/kerusi tersusun kondusif.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Permainan Dalaman:</b> Simpan Catur/Saidina dalam kotak
+                  asal.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Sanitasi:</b> Tiada sisa makanan/minuman tertinggal.</span
+                >
+              </div>
+            </div>
+
+            <!-- S6: Mini Herbs Garden -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #dcfce7; color: #166534"
+                  >S6</span
+                >
+                <span class="sec-title">🌿 Mini Herbs Garden</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Kebersihan Taman:</b> Bebas sampah/daun kering
+                  berselerak.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Label Maklumat:</b> Nama saintifik tumbuhan jelas
+                  dibaca.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- ZONE 4: Akademik & Sahsiah (Seksyen 4, 7, 8) -->
+        <!-- ─────────────────────────────────────────── -->
+
+        <!-- INFO BOX (FULL WIDTH) -->
+        <div class="bg-red-50 border-l-4 border-red-500 p-2 w-full">
+          <div class="flex">
+            <div class="ml-3">
+              <h3 class="sec-title font-medium text-red-800">
+                🎓 Seksyen 4, 7 & 8: Akademik & Sahsiah
+              </h3>
+              <div class="mt-2 task-text text-red-700">
+                <p>
+                  Fokus kepada pembangunan modal insan: Program Mentor-Mentee,
+                  Kawalan Disiplin, dan pemerkasaan program NILAM melalui Sistem
+                  AINS (DELIMa).
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-akademik" class="tab-panel active">
+          <div
+            style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px"
+          >
+            <!-- S4: Mentor-Mentee -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #ccfbf1; color: #0f766e"
+                  >S4</span
+                >
+                <span class="sec-title">Program Mentor-Mentee</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Mentor Sebaya:</b> Membantu rakan memahami subjek.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Bimbingan Rujukan:</b> Bantu cari buku teks/modul.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Penyeliaan Fokus:</b> Kawalan bunyi di zon ulang
+                  kaji.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Susun Atur:</b> Kerusi/meja dikembalikan ke tempat
+                  asal.</span
+                >
+              </div>
+            </div>
+
+            <!-- S7: Disiplin & Inventori -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #fee2e2; color: #b91c1c"
+                  >S7</span
+                >
+                <span class="sec-title">Disiplin &amp; Inventori</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Etika:</b> Kawal kebisingan &amp; larangan beg.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Inventori Prasarana:</b> Periksa lampu, suis,
+                  perabot.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Sanitasi:</b> Lantai/rak bebas habuk.</span
+                >
+              </div>
+            </div>
+
+            <!-- S8: Tugas Khas & NILAM -->
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  margin-bottom: 3px;
+                "
+              >
+                <span class="badge" style="background: #fef9c3; color: #a16207"
+                  >S8</span
+                >
+                <span class="sec-title">Tugas Khas &amp; NILAM</span>
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Sistem AINS:</b> Bantu akses DELIMa &amp; rekod
+                  NILAM.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Teknikal Bahan:</b> Stamping, label &amp; balut
+                  buku.</span
+                >
+              </div>
+              <div class="task-row">
+                <input type="checkbox" class="task-cb" /><span class="task-text"
+                  ><b>Promosi Literasi:</b> Taklimat e-buku Ookbee/carian
+                  bahan.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- PHOTO ATTACHMENTS -->
+        <!-- ─────────────────────────────────────────── -->
+        <div class="card" style="padding: 4px 7px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 5px;
+              margin-bottom: 3px;
+            "
+          >
+            <span class="sec-title">📷 Lampiran Gambar</span>
+            <span class="hint-text">(muat naik sehingga 4 gambar)</span>
+          </div>
+          <div class="grid-4">
+            <div class="img-box">
+              <input
+                type="file"
+                id="image1"
+                accept="image/*"
+                class="hidden"
+                onchange="previewImage(this, 'preview1')"
+                style="display: none"
+              />
+              <label for="image1"
+                ><div id="preview1" class="preview-area">
+                  <span style="font-size: 6pt; color: #9ca3af">Gambar 1</span>
+                </div></label
+              >
+            </div>
+            <div class="img-box">
+              <input
+                type="file"
+                id="image2"
+                accept="image/*"
+                class="hidden"
+                onchange="previewImage(this, 'preview2')"
+                style="display: none"
+              />
+              <label for="image2"
+                ><div id="preview2" class="preview-area">
+                  <span style="font-size: 6pt; color: #9ca3af">Gambar 2</span>
+                </div></label
+              >
+            </div>
+            <div class="img-box">
+              <input
+                type="file"
+                id="image3"
+                accept="image/*"
+                class="hidden"
+                onchange="previewImage(this, 'preview3')"
+                style="display: none"
+              />
+              <label for="image3"
+                ><div id="preview3" class="preview-area">
+                  <span style="font-size: 6pt; color: #9ca3af">Gambar 3</span>
+                </div></label
+              >
+            </div>
+            <div class="img-box">
+              <input
+                type="file"
+                id="image4"
+                accept="image/*"
+                class="hidden"
+                onchange="previewImage(this, 'preview4')"
+                style="display: none"
+              />
+              <label for="image4"
+                ><div id="preview4" class="preview-area">
+                  <span style="font-size: 6pt; color: #9ca3af">Gambar 4</span>
+                </div></label
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────── -->
+        <!-- REFLECTION & SIGNATURE -->
+        <!-- ─────────────────────────────────────────── -->
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 6px;
+            align-items: end;
+          "
+        >
+          <div class="card" style="padding: 4px 7px">
+            <div class="sec-title" style="margin-bottom: 2px">
+              Refleksi &amp; Catatan Tambahan
+            </div>
+            <textarea
+              class="reflection-ta"
+              placeholder="Isu berbangkit, kerosakan spesifik, atau cadangan penambahbaikan..."
+            ></textarea>
+          </div>
+
+          <div class="signature-area">
+            <div style="text-align: right; padding-bottom: 2px">
+              <div class="label-text" style="margin-bottom: 6px">
+                Tandatangan Pengawas:
+              </div>
+              <div class="sig-line" style="width: 100px"></div>
+              <div class="label-text" style="margin-top: 2px">
+                Tarikh: ___________
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="download-btn" style="display: grid">
+          <button
+            onclick="submitForm()"
+            style="
+              background: #16a34a;
+              color: white;
+              border: none;
+              padding: 5px 14px;
+              border-radius: 6px;
+              font-size: medium;
+              font-weight: 600;
+              cursor: pointer;
+              font-family: Inter, sans-serif;
+            "
+          >
+            Muat Turun Laporan
+          </button>
+        </div>
+      </div>
+
+      <!-- ── FOOTER ── -->
+      <div
+        style="
+          border-top: 1px solid #f3f4f6;
+          padding-top: 3px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 3px;
+        "
+      >
+        <div class="footer-text">
+          e-Laporan Pengawas PSS &copy; 2026 | Pusat Sumber Sekolah Permata
+          Gemilang &mdash; Kolej Datu Patinggi Abang Haji Abdillah
+        </div>
+        <div class="footer-text">*Semak semua butiran sebelum pengesahan</div>
+      </div>
+    </div>
+    <!-- end of form -->
+  </body>
+</html>
